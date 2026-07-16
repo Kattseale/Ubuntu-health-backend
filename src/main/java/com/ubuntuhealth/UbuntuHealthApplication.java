@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 public class UbuntuHealthApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(UbuntuHealthApplication.class, args);
 	}
