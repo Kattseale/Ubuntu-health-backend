@@ -12,3 +12,5 @@ public class UbuntuHealthApplication {
 		SpringApplication.run(UbuntuHealthApplication.class, args);
 	}
 }
+
+

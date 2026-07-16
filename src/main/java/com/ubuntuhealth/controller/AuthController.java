@@ -1,9 +1,9 @@
-
-
 package com.ubuntuhealth.controller;
 
 import com.ubuntuhealth.model.User;
 import com.ubuntuhealth.service.AuthService;
+import com.ubuntuhealth.dto.LoginRequest;
+import com.ubuntuhealth.dto.AuthResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // This is 1 of your 12 required endpoints![cite: 2]
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
@@ -26,6 +25,16 @@ public class AuthController {
             return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) { // <-- Uses the imported LoginRequest DTO
+        try {
+            AuthResponse response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 }
