@@ -4,13 +4,13 @@ import com.ubuntuhealth.dto.request.MedicationRequest;
 import com.ubuntuhealth.dto.response.MedicationResponse;
 import com.ubuntuhealth.entity.Clinic;
 import com.ubuntuhealth.entity.Medication;
+import com.ubuntuhealth.exception.ResourceNotFoundException;
 import com.ubuntuhealth.repository.ClinicRepository;
 import com.ubuntuhealth.repository.MedicationRepository;
 import com.ubuntuhealth.service.MedicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.security.cert.CertPathBuilder;
 import java.util.List;
 
 @Service
@@ -24,7 +24,7 @@ public class MedicationServiceImpl implements MedicationService {
     public MedicationResponse createMedication(MedicationRequest request) {
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
 
         Medication medication = Medication.builder()
                 .name(request.getName())
@@ -51,7 +51,7 @@ public class MedicationServiceImpl implements MedicationService {
     public MedicationResponse getMedicationById(Long id) {
 
         Medication medication = medicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
         return mapToResponse(medication);
     }
@@ -60,10 +60,10 @@ public class MedicationServiceImpl implements MedicationService {
     public MedicationResponse updateMedication(Long id, MedicationRequest request) {
 
         Medication medication = medicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
         medication.setName(request.getName());
         medication.setDescription(request.getDescription());
@@ -126,7 +126,4 @@ public class MedicationServiceImpl implements MedicationService {
                 .build();
     }
 
-    private CertPathBuilder clinicName(String clinicName) {
-        return null;
-    }
 }

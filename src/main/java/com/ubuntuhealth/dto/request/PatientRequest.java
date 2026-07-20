@@ -1,5 +1,9 @@
 package com.ubuntuhealth.dto.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -7,24 +11,34 @@ import java.time.LocalDate;
 @Data
 public class PatientRequest {
 
-    private String firstName;
+        @NotBlank(message = "First name is required.")
+        private String firstName;
 
-    private String lastName;
+        @NotBlank(message = "Last name is required.")
+        private String lastName;
 
-    private String gender;
+        @NotBlank(message = "Gender is required.")
+        private String gender;
 
-    private LocalDate dateOfBirth;
+        @NotNull(message = "Date of birth is required.")
+        private LocalDate dateOfBirth;
 
-    private String email;
+        @Email(message = "Please enter a valid email address.")
+        @NotBlank(message = "Email is required.")
+        private String email;
 
-    private String phoneNumber;
+        @NotBlank(message = "Phone number is required.")
+        private String phoneNumber;
 
-    private String address;
+        @NotBlank(message = "Address is required.")
+        private String address;
 
-    private String bloodGroup;
+        @NotBlank(message = "Blood group is required.")
+        private String bloodGroup;
 
-    private String emergencyContact;
+        @NotBlank(message = "Emergency contact is required.")
+        private String emergencyContact;
 
-    private Long clinicId;
-
-}
+        @NotNull(message = "Clinic ID is required.")
+        private Long clinicId;
+    }
