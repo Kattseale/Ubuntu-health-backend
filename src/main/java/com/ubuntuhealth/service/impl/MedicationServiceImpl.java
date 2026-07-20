@@ -108,7 +108,11 @@ public class MedicationServiceImpl implements MedicationService {
 
     @Override
     public List<MedicationResponse> getAvailableMedications() {
-        return List.of();
+
+        return medicationRepository.findByAvailableTrue()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private MedicationResponse mapToResponse(Medication medication) {
