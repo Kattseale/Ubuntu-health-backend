@@ -1,8 +1,10 @@
 package com.ubuntuhealth.controller;
 
 import com.ubuntuhealth.dto.request.ClinicRequest;
+import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.ClinicResponse;
 import com.ubuntuhealth.service.ClinicService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,8 @@ public class ClinicController {
     private final ClinicService clinicService;
 
     @PostMapping
-    public ResponseEntity<ClinicResponse> createClinic(@RequestBody ClinicRequest request) {
+    public ResponseEntity<ClinicResponse> createClinic(
+            @Valid @RequestBody ClinicRequest request) {
 
         ClinicResponse response = clinicService.createClinic(request);
 
@@ -40,17 +43,18 @@ public class ClinicController {
     @PutMapping("/{id}")
     public ResponseEntity<ClinicResponse> updateClinic(
             @PathVariable Long id,
-            @RequestBody ClinicRequest request) {
+            @Valid @RequestBody ClinicRequest request) {
 
         return ResponseEntity.ok(clinicService.updateClinic(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteClinic(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteClinic(@PathVariable Long id) {
 
         clinicService.deleteClinic(id);
 
-        return ResponseEntity.ok("Clinic deleted successfully.");
+        return ResponseEntity.ok(
+                new ApiResponse("Clinic deleted successfully.")
+        );
     }
-
 }

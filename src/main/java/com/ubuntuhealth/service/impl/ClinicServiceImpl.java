@@ -3,6 +3,8 @@ package com.ubuntuhealth.service.impl;
 import com.ubuntuhealth.dto.request.ClinicRequest;
 import com.ubuntuhealth.dto.response.ClinicResponse;
 import com.ubuntuhealth.entity.Clinic;
+import com.ubuntuhealth.exception.DuplicateResourceException;
+import com.ubuntuhealth.exception.ResourceNotFoundException;
 import com.ubuntuhealth.repository.ClinicRepository;
 import com.ubuntuhealth.service.ClinicService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ public class ClinicServiceImpl implements ClinicService {
     public ClinicResponse createClinic(ClinicRequest request) {
 
         if (clinicRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Clinic email already exists.");
+            throw new DuplicateResourceException("Clinic email already exists.");
         }
 
         Clinic clinic = Clinic.builder()
@@ -44,7 +46,7 @@ public class ClinicServiceImpl implements ClinicService {
     public ClinicResponse getClinicById(Long id) {
 
         Clinic clinic = clinicRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Clinic not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
 
         return mapToResponse(clinic);
     }

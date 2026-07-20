@@ -1,8 +1,10 @@
 package com.ubuntuhealth.controller;
 
 import com.ubuntuhealth.dto.request.PatientRequest;
+import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.PatientResponse;
 import com.ubuntuhealth.service.PatientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,8 @@ public class PatientController {
     private final PatientService patientService;
 
     @PostMapping
-    public ResponseEntity<PatientResponse> createPatient(@RequestBody PatientRequest request) {
+    public ResponseEntity<PatientResponse> createPatient(
+            @Valid @RequestBody PatientRequest request) {
         PatientResponse response = patientService.createPatient(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -36,15 +39,19 @@ public class PatientController {
     @PutMapping("/{id}")
     public ResponseEntity<PatientResponse> updatePatient(
             @PathVariable Long id,
-            @RequestBody PatientRequest request) {
+            @Valid @RequestBody PatientRequest request) {
 
         return ResponseEntity.ok(patientService.updatePatient(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePatient(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deletePatient(@PathVariable Long id) {
+
         patientService.deletePatient(id);
-        return ResponseEntity.ok("Patient deleted successfully.");
+
+        return ResponseEntity.ok(
+                new ApiResponse("Patient deleted successfully.")
+        );
     }
 
     @GetMapping("/clinic/{clinicId}")

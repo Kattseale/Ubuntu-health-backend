@@ -4,6 +4,8 @@ import com.ubuntuhealth.dto.request.PatientRequest;
 import com.ubuntuhealth.dto.response.PatientResponse;
 import com.ubuntuhealth.entity.Clinic;
 import com.ubuntuhealth.entity.Patient;
+import com.ubuntuhealth.exception.DuplicateResourceException;
+import com.ubuntuhealth.exception.ResourceNotFoundException;
 import com.ubuntuhealth.repository.ClinicRepository;
 import com.ubuntuhealth.repository.PatientRepository;
 import com.ubuntuhealth.service.PatientService;
@@ -23,7 +25,11 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponse createPatient(PatientRequest request) {
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
+        
+        if (patientRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Patient email already exists.");
+        }
 
         Patient patient = Patient.builder()
                 .firstName(request.getFirstName())
@@ -54,7 +60,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientResponse getPatientById(Long id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found."));
 
         return mapToResponse(patient);
     }
@@ -63,10 +69,10 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponse updatePatient(Long id, PatientRequest request) {
 
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
 
         patient.setFirstName(request.getFirstName());
         patient.setLastName(request.getLastName());
@@ -88,7 +94,7 @@ public class PatientServiceImpl implements PatientService {
     public void deletePatient(Long id) {
 
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         patientRepository.delete(patient);
     }
