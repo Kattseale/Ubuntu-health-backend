@@ -37,7 +37,11 @@ public class Patient {
 
     private String bloodGroup;
 
-    private String emergencyContact;
+    @Column(nullable = false)
+    private String emergencyContactName;
+
+    @Column(nullable = false)
+    private String emergencyContactPhone;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clinic_id", nullable = false)

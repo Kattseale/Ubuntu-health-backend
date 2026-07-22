@@ -36,8 +36,11 @@ public class PatientRequest {
         @NotBlank(message = "Blood group is required.")
         private String bloodGroup;
 
-        @NotBlank(message = "Emergency contact is required.")
-        private String emergencyContact;
+        @NotBlank(message = "Emergency contact name is required.")
+        private String emergencyContactName;
+
+        @NotBlank(message = "Emergency contact phone number is required.")
+        private String emergencyContactPhone;
 
         @NotNull(message = "Clinic ID is required.")
         private Long clinicId;
