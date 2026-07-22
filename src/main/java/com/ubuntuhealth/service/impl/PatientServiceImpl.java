@@ -40,7 +40,8 @@ public class PatientServiceImpl implements PatientService {
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())
                 .bloodGroup(request.getBloodGroup())
-                .emergencyContact(request.getEmergencyContact())
+                .emergencyContactName(request.getEmergencyContactName())
+                .emergencyContactPhone(request.getEmergencyContactPhone())
                 .clinic(clinic)
                 .build();
 
@@ -82,7 +83,8 @@ public class PatientServiceImpl implements PatientService {
         patient.setPhoneNumber(request.getPhoneNumber());
         patient.setAddress(request.getAddress());
         patient.setBloodGroup(request.getBloodGroup());
-        patient.setEmergencyContact(request.getEmergencyContact());
+        patient.setEmergencyContactName(request.getEmergencyContactName());
+        patient.setEmergencyContactPhone(request.getEmergencyContactPhone());
         patient.setClinic(clinic);
 
         Patient updatedPatient = patientRepository.save(patient);
@@ -118,7 +120,8 @@ public class PatientServiceImpl implements PatientService {
                 .phoneNumber(patient.getPhoneNumber())
                 .address(patient.getAddress())
                 .bloodGroup(patient.getBloodGroup())
-                .emergencyContact(patient.getEmergencyContact())
+                .emergencyContactName(patient.getEmergencyContactName())
+                .emergencyContactPhone(patient.getEmergencyContactPhone())
                 .clinicId(patient.getClinic().getId())
                 .clinicName(patient.getClinic().getClinicName())
                 .build();
