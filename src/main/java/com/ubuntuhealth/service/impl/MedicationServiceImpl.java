@@ -27,12 +27,11 @@ public class MedicationServiceImpl implements MedicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
 
         Medication medication = Medication.builder()
-                .name(request.getName())
+                .medicationName(request.getMedicationName())
                 .description(request.getDescription())
                 .dosage(request.getDosage())
-                .quantity(request.getQuantity())
-                .price(request.getPrice())
-                .available(request.getQuantity() > 0)
+                .quantityAvailable(request.getQuantityAvailable())
+                .available(request.getQuantityAvailable() > 0)
                 .clinic(clinic)
                 .build();
 
@@ -63,14 +62,13 @@ public class MedicationServiceImpl implements MedicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
 
-        medication.setName(request.getName());
+        medication.setMedicationName(request.getMedicationName());
         medication.setDescription(request.getDescription());
         medication.setDosage(request.getDosage());
-        medication.setQuantity(request.getQuantity());
-        medication.setPrice(request.getPrice());
-        medication.setAvailable(request.getQuantity() > 0);
+        medication.setQuantityAvailable(request.getQuantityAvailable());
+        medication.setAvailable(request.getQuantityAvailable() > 0);
         medication.setClinic(clinic);
 
         return mapToResponse(medicationRepository.save(medication));
@@ -80,7 +78,7 @@ public class MedicationServiceImpl implements MedicationService {
     public void deleteMedication(Long id) {
 
         Medication medication = medicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
         medicationRepository.delete(medication);
     }
@@ -95,13 +93,13 @@ public class MedicationServiceImpl implements MedicationService {
     }
 
     @Override
-    public MedicationResponse updateStock(Long id, Integer quantity) {
+    public MedicationResponse updateStock(Long id, Integer quantityAvailable) {
 
         Medication medication = medicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found."));
 
-        medication.setQuantity(quantity);
-        medication.setAvailable(quantity > 0);
+        medication.setQuantityAvailable(quantityAvailable);
+        medication.setAvailable(quantityAvailable > 0);
 
         return mapToResponse(medicationRepository.save(medication));
     }
@@ -119,15 +117,13 @@ public class MedicationServiceImpl implements MedicationService {
 
         return MedicationResponse.builder()
                 .id(medication.getId())
-                .name(medication.getName())
+                .medicationName(medication.getMedicationName())
                 .description(medication.getDescription())
                 .dosage(medication.getDosage())
-                .quantity(medication.getQuantity())
-                .price(medication.getPrice())
+                .quantityAvailable(medication.getQuantityAvailable())
                 .available(medication.getAvailable())
                 .clinicId(medication.getClinic().getId())
                 .clinicName(medication.getClinic().getClinicName())
                 .build();
     }
-
 }
