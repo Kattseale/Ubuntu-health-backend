@@ -11,15 +11,13 @@ public class MedicationResponse {
 
     private Long id;
 
-    private String name;
+    private String medicationName;
 
     private String description;
 
     private String dosage;
 
-    private Integer quantity;
-
-    private Double price;
+    private Integer quantityAvailable;
 
     private Boolean available;
 

@@ -22,4 +22,7 @@ public interface MedicationService {
     MedicationResponse updateStock(Long id, Integer quantity);
 
     List<MedicationResponse> getAvailableMedications();
+
+    class AppointmentService {
+    }
 }

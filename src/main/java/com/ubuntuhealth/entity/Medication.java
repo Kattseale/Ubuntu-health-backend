@@ -16,16 +16,14 @@ public class Medication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String medicationName;
 
     @Column(length = 500)
     private String description;
 
     private String dosage;
 
-    private Integer quantity;
-
-    private Double price;
+    private Integer quantityAvailable;
 
     private Boolean available;
 
