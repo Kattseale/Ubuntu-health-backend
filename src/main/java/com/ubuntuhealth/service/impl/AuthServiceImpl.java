@@ -45,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
                 .enabled(true)
                 .build();
@@ -85,11 +86,9 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() ->
                         new RuntimeException("User not found."));
 
-        // Remove any existing reset token
         passwordResetTokenRepository.findByUserId(user.getId())
                 .ifPresent(passwordResetTokenRepository::delete);
 
-        // Generate secure token
         String token = UUID.randomUUID().toString();
 
         PasswordResetToken resetToken = PasswordResetToken.builder()
@@ -100,7 +99,6 @@ public class AuthServiceImpl implements AuthService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        // Later this will be emailed to the user
         return new ApiResponse(
                 "Password reset token generated successfully: " + token
         );
@@ -129,7 +127,6 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // Delete the used token
         passwordResetTokenRepository.delete(resetToken);
 
         return new ApiResponse("Password reset successfully.");
