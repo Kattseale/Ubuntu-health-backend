@@ -7,9 +7,12 @@ import java.util.List;
 
 public interface AnnouncementService {
 
-    AnnouncementResponse create(AnnouncementRequest request);
+    AnnouncementResponse createAnnouncement(AnnouncementRequest request);
 
-    List<AnnouncementResponse> getAll();
+    List<AnnouncementResponse> getAllAnnouncements();
 
-    void delete(Long id);
+    AnnouncementResponse updateAnnouncement(Long id, AnnouncementRequest request);
+
+    void deleteAnnouncement(Long id);
+
 }

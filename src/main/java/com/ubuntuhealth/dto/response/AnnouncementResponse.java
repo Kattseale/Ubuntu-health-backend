@@ -1,5 +1,7 @@
 package com.ubuntuhealth.dto.response;
 
+import com.ubuntuhealth.entity.Priority;
+import com.ubuntuhealth.entity.Role;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,9 +15,16 @@ public class AnnouncementResponse {
 
     private String title;
 
-    private String message;
+    private String description;
+
+    private Priority priority;
+
+    private String createdBy;
+
+    private Role createdByRole;
 
     private LocalDateTime createdAt;
 
-    private String createdBy;
+    private boolean active;
+
 }

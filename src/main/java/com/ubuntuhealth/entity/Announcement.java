@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "announcements")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,12 +18,26 @@ public class Announcement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
 
-    @Column(length = 3000)
-    private String message;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Priority priority;
+
+    @Column(nullable = false)
+    private String createdBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role createdByRole;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    private String createdBy;
+    @Builder.Default
+    private boolean active = true;
 }
