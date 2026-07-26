@@ -1,6 +1,7 @@
 package com.ubuntuhealth.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.config.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -33,11 +35,18 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+
+                                "/api/patients/**",
+                                "/api/clinics/**",
+                                "/api/appointments/**",
+                                "/api/medications/**",
+                                "/api/community/**",
+                                "/api/announcements/**",
+                                "/api/reports/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
