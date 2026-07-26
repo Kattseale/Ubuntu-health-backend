@@ -3,6 +3,8 @@ package com.ubuntuhealth.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -38,5 +40,28 @@ public class User {
     @Builder.Default
     @Column(nullable = false)
     private Boolean enabled = true;
+
+    // ===============================
+    // Password Status
+    // ===============================
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean passwordChanged = false;
+
+    // ===============================
+    // Account Lock Security
+    // ===============================
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer failedLoginAttempts = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean accountLocked = false;
+
+    @Column
+    private LocalDateTime lockTime;
 
 }
