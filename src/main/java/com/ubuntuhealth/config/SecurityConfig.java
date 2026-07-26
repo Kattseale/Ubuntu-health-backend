@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()  // Allow login/register/forgot-pass endpoints
+                        .requestMatchers("/api/announcements/**").hasAnyRole("ADMIN", "PATIENT", "USER") // Allow Admins and Patients to read/post announcements
                         .anyRequest().authenticated()
                 );
 
