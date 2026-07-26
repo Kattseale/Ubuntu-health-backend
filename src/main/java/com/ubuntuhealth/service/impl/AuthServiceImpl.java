@@ -1,5 +1,6 @@
 package com.ubuntuhealth.service.impl;
 
+import com.ubuntuhealth.dto.request.ChangePasswordRequest;
 import com.ubuntuhealth.dto.request.ForgotPasswordRequest;
 import com.ubuntuhealth.dto.request.LoginRequest;
 import com.ubuntuhealth.dto.request.RegisterRequest;
@@ -10,12 +11,12 @@ import com.ubuntuhealth.entity.PasswordResetToken;
 import com.ubuntuhealth.entity.User;
 import com.ubuntuhealth.repository.PasswordResetTokenRepository;
 import com.ubuntuhealth.repository.UserRepository;
-import com.ubuntuhealth.security.CustomUserDetailsService;
 import com.ubuntuhealth.security.JwtService;
 import com.ubuntuhealth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
@@ -48,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
                 .enabled(true)
+                .passwordChanged(false)
                 .build();
 
         userRepository.save(user);
@@ -58,16 +59,78 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new RuntimeException("Invalid email or password."));
+
+        // Check if account is enabled
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new RuntimeException(
+                    "Your account has been disabled. Please contact the administrator."
+            );
+        }
+
+        // Check if account is locked
+        if (Boolean.TRUE.equals(user.getAccountLocked())) {
+
+            // Unlock automatically after 30 minutes
+            if (user.getLockTime() != null &&
+                    user.getLockTime().plusMinutes(30).isBefore(LocalDateTime.now())) {
+
+                user.setAccountLocked(false);
+                user.setFailedLoginAttempts(0);
+                user.setLockTime(null);
+
+                userRepository.save(user);
+
+            } else {
+
+                throw new RuntimeException(
+                        "Your account has been locked due to multiple failed login attempts. Please try again after 30 minutes."
+                );
+            }
+        }
+
+        try {
+
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+        } catch (Exception ex) {
+
+            int attempts = user.getFailedLoginAttempts() + 1;
+
+            user.setFailedLoginAttempts(attempts);
+
+            if (attempts >= 5) {
+
+                user.setAccountLocked(true);
+                user.setLockTime(LocalDateTime.now());
+
+                userRepository.save(user);
+
+                throw new RuntimeException(
+                        "Your account has been locked after 5 failed login attempts. Please try again after 30 minutes."
+                );
+            }
+
+            userRepository.save(user);
+
+            throw new RuntimeException(
+                    "Invalid email or password. Remaining attempts: " + (5 - attempts)
+            );
+        }
+
+        // Successful login
+        user.setFailedLoginAttempts(0);
+        user.setAccountLocked(false);
+        user.setLockTime(null);
+
+        userRepository.save(user);
 
         String token = jwtService.generateToken(user);
 
@@ -78,13 +141,16 @@ public class AuthServiceImpl implements AuthService {
                 .message("Login successful.")
                 .build();
     }
-
     @Override
     public ApiResponse forgotPassword(ForgotPasswordRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new RuntimeException("User not found."));
+
+        if (!user.getEnabled()) {
+            throw new RuntimeException("This account has been disabled.");
+        }
 
         passwordResetTokenRepository.findByUserId(user.getId())
                 .ifPresent(passwordResetTokenRepository::delete);
@@ -121,9 +187,12 @@ public class AuthServiceImpl implements AuthService {
 
         User user = resetToken.getUser();
 
-        user.setPassword(
-                passwordEncoder.encode(request.getNewPassword())
-        );
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("New password cannot be the same as the current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordChanged(true);
 
         userRepository.save(user);
 
@@ -132,4 +201,39 @@ public class AuthServiceImpl implements AuthService {
         return new ApiResponse("Password reset successfully.");
     }
 
+    @Override
+    public ApiResponse changePassword(ChangePasswordRequest request) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found."));
+
+        if (!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getPassword())) {
+
+            throw new RuntimeException("Current password is incorrect.");
+        }
+
+        if (passwordEncoder.matches(
+                request.getNewPassword(),
+                user.getPassword())) {
+
+            throw new RuntimeException(
+                    "New password cannot be the same as the current password."
+            );
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordChanged(true);
+
+        userRepository.save(user);
+
+        return new ApiResponse("Password changed successfully.");
+    }
 }

@@ -3,14 +3,14 @@ package com.ubuntuhealth.service.impl;
 import com.ubuntuhealth.dto.request.CommunityPostRequest;
 import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.CommunityPostResponse;
-import com.ubuntuhealth.entity.Clinic;
 import com.ubuntuhealth.entity.CommunityPost;
-import com.ubuntuhealth.entity.Patient;
-import com.ubuntuhealth.repository.ClinicRepository;
+import com.ubuntuhealth.entity.User;
 import com.ubuntuhealth.repository.CommunityPostRepository;
-import com.ubuntuhealth.repository.PatientRepository;
+import com.ubuntuhealth.repository.UserRepository;
 import com.ubuntuhealth.service.CommunityPostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,27 +20,28 @@ import java.util.List;
 public class CommunityPostServiceImpl implements CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
-    private final PatientRepository patientRepository;
-    private final ClinicRepository clinicRepository;
+    private final UserRepository userRepository;
 
     @Override
     public CommunityPostResponse createPost(CommunityPostRequest request) {
 
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found."));
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found."));
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found."));
 
         CommunityPost post = CommunityPost.builder()
-                .message(request.getMessage())
-                .patient(patient)
-                .clinic(clinic)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .user(user)
+                .authorName(user.getFirstName() + " " + user.getLastName())
+                .authorEmail(user.getEmail())
                 .build();
 
-        communityPostRepository.save(post);
+        CommunityPost savedPost = communityPostRepository.save(post);
 
-        return mapToResponse(post);
+        return mapToResponse(savedPost);
     }
 
     @Override
@@ -56,37 +57,35 @@ public class CommunityPostServiceImpl implements CommunityPostService {
     public CommunityPostResponse getPostById(Long id) {
 
         CommunityPost post = communityPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Community post not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Community post not found."));
 
         return mapToResponse(post);
     }
 
     @Override
-    public CommunityPostResponse updatePost(Long id, CommunityPostRequest request) {
+    public CommunityPostResponse updatePost(
+            Long id,
+            CommunityPostRequest request) {
 
         CommunityPost post = communityPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Community post not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Community post not found."));
 
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found."));
+        post.setTitle(request.getTitle());
+        post.setContent(request.getContent());
 
-        Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found."));
+        CommunityPost updatedPost = communityPostRepository.save(post);
 
-        post.setMessage(request.getMessage());
-        post.setPatient(patient);
-        post.setClinic(clinic);
-
-        communityPostRepository.save(post);
-
-        return mapToResponse(post);
+        return mapToResponse(updatedPost);
     }
 
     @Override
     public ApiResponse deletePost(Long id) {
 
         CommunityPost post = communityPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Community post not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Community post not found."));
 
         communityPostRepository.delete(post);
 
@@ -94,18 +93,9 @@ public class CommunityPostServiceImpl implements CommunityPostService {
     }
 
     @Override
-    public List<CommunityPostResponse> getPostsByClinic(Long clinicId) {
+    public List<CommunityPostResponse> getPostsByUser(Long userId) {
 
-        return communityPostRepository.findByClinicId(clinicId)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    @Override
-    public List<CommunityPostResponse> getPostsByPatient(Long patientId) {
-
-        return communityPostRepository.findByPatientId(patientId)
+        return communityPostRepository.findByUserId(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -115,12 +105,14 @@ public class CommunityPostServiceImpl implements CommunityPostService {
 
         return CommunityPostResponse.builder()
                 .id(post.getId())
-                .message(post.getMessage())
+                .userId(post.getUser().getId())
+                .userName(post.getAuthorName())
+                .userEmail(post.getAuthorEmail())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .likes(post.getLikes())
+                .comments(post.getComments())
                 .createdAt(post.getCreatedAt())
-                .patientId(post.getPatient().getId())
-                .patientName(post.getPatient().getFirstName() + " " + post.getPatient().getLastName())
-                .clinicId(post.getClinic().getId())
-                .clinicName(post.getClinic().getClinicName())
                 .build();
     }
 }

@@ -14,34 +14,47 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/community")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class CommunityController {
 
     private final CommunityPostService communityPostService;
 
-    // Create a community post
+    // ================= CREATE =================
+
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public CommunityPostResponse createPost(
             @Valid @RequestBody CommunityPostRequest request) {
 
         return communityPostService.createPost(request);
     }
 
-    // Get all community posts
+    // ================= READ =================
+
     @GetMapping
     public List<CommunityPostResponse> getAllPosts() {
 
         return communityPostService.getAllPosts();
     }
 
-    // Get a community post by ID
     @GetMapping("/{id}")
-    public CommunityPostResponse getPostById(@PathVariable Long id) {
+    public CommunityPostResponse getPostById(
+            @PathVariable Long id) {
 
         return communityPostService.getPostById(id);
     }
 
-    // Update a community post
+    @GetMapping("/user/{userId}")
+    public List<CommunityPostResponse> getPostsByUser(
+            @PathVariable Long userId) {
+
+        return communityPostService.getPostsByUser(userId);
+    }
+
+    // ================= UPDATE =================
+
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public CommunityPostResponse updatePost(
             @PathVariable Long id,
             @Valid @RequestBody CommunityPostRequest request) {
@@ -49,26 +62,13 @@ public class CommunityController {
         return communityPostService.updatePost(id, request);
     }
 
-    // Delete a community post (Admin only)
+    // ================= DELETE =================
+
     @DeleteMapping("/{id}")
-    public ApiResponse deletePost(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse deletePost(
+            @PathVariable Long id) {
 
         return communityPostService.deletePost(id);
-    }
-
-    // Get posts by clinic
-    @GetMapping("/clinic/{clinicId}")
-    public List<CommunityPostResponse> getPostsByClinic(
-            @PathVariable Long clinicId) {
-
-        return communityPostService.getPostsByClinic(clinicId);
-    }
-
-    // Get posts by patient
-    @GetMapping("/patient/{patientId}")
-    public List<CommunityPostResponse> getPostsByPatient(
-            @PathVariable Long patientId) {
-
-        return communityPostService.getPostsByPatient(patientId);
     }
 }

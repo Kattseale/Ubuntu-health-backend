@@ -13,16 +13,20 @@ public class CommunityPostResponse {
 
     private Long id;
 
-    private String message;
+    private Long userId;
+
+    private String userName;
+
+    private String userEmail;
+
+    private String title;
+
+    private String content;
+
+    private Integer likes;
+
+    private Integer comments;
 
     private LocalDateTime createdAt;
-
-    private Long patientId;
-
-    private String patientName;
-
-    private Long clinicId;
-
-    private String clinicName;
 
 }

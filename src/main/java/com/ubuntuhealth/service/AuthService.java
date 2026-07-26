@@ -1,5 +1,6 @@
 package com.ubuntuhealth.service;
 
+import com.ubuntuhealth.dto.request.ChangePasswordRequest;
 import com.ubuntuhealth.dto.request.ForgotPasswordRequest;
 import com.ubuntuhealth.dto.request.LoginRequest;
 import com.ubuntuhealth.dto.request.RegisterRequest;
@@ -16,5 +17,7 @@ public interface AuthService {
     ApiResponse forgotPassword(ForgotPasswordRequest request);
 
     ApiResponse resetPassword(ResetPasswordRequest request);
+
+    ApiResponse changePassword(ChangePasswordRequest request);
 
 }

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,40 +31,46 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
 
+                .cors(Customizer.withDefaults())
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**",
-
-                                "/api/patients/**",
-                                "/api/clinics/**",
-                                "/api/appointments/**",
-                                "/api/medications/**",
-                                "/api/community/**",
-                                "/api/announcements/**",
-                                "/api/reports/**"
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Announcements
+                        // Roles are enforced using @PreAuthorize in AnnouncementController
+                        .requestMatchers("/api/announcements/**")
+                        .authenticated()
+
+                        // Admin endpoints
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
+                        // Doctor endpoints
                         .requestMatchers("/api/doctor/**")
                         .hasRole("DOCTOR")
 
+                        // Receptionist endpoints
                         .requestMatchers("/api/receptionist/**")
                         .hasRole("RECEPTIONIST")
 
+                        // Patient endpoints
                         .requestMatchers("/api/patient/**")
                         .hasRole("PATIENT")
 
+                        // Everything else requires authentication
                         .anyRequest()
                         .authenticated()
-
                 )
 
                 .authenticationProvider(authenticationProvider())
@@ -80,7 +87,6 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
 
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-
         provider.setUserDetailsService(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
 
@@ -93,7 +99,5 @@ public class SecurityConfig {
     ) throws Exception {
 
         return configuration.getAuthenticationManager();
-
     }
-
 }

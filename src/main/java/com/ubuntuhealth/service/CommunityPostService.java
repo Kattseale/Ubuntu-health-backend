@@ -8,18 +8,34 @@ import java.util.List;
 
 public interface CommunityPostService {
 
+    /**
+     * Create a new community post.
+     */
     CommunityPostResponse createPost(CommunityPostRequest request);
 
+    /**
+     * Get all community posts.
+     */
     List<CommunityPostResponse> getAllPosts();
 
+    /**
+     * Get a community post by its ID.
+     */
     CommunityPostResponse getPostById(Long id);
 
+    /**
+     * Update an existing community post.
+     */
     CommunityPostResponse updatePost(Long id, CommunityPostRequest request);
 
+    /**
+     * Delete a community post.
+     */
     ApiResponse deletePost(Long id);
 
-    List<CommunityPostResponse> getPostsByClinic(Long clinicId);
-
-    List<CommunityPostResponse> getPostsByPatient(Long patientId);
+    /**
+     * Get all posts created by a specific user.
+     */
+    List<CommunityPostResponse> getPostsByUser(Long userId);
 
 }
