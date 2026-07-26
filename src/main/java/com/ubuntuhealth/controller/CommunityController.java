@@ -19,7 +19,6 @@ public class CommunityController {
     private final CommunityPostService communityPostService;
 
     // Create a community post
-    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public CommunityPostResponse createPost(
             @Valid @RequestBody CommunityPostRequest request) {
@@ -42,7 +41,6 @@ public class CommunityController {
     }
 
     // Update a community post
-    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}")
     public CommunityPostResponse updatePost(
             @PathVariable Long id,
@@ -52,7 +50,6 @@ public class CommunityController {
     }
 
     // Delete a community post (Admin only)
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ApiResponse deletePost(@PathVariable Long id) {
 
