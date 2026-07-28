@@ -7,6 +7,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface AppointmentService {
+    List<AppointmentResponse> getAppointmentsByClinic(Long clinicId);
+
+    List<AppointmentResponse> getAppointmentsByPatient(Long patientId);
+
+    List<AppointmentResponse> getAppointmentsByDate(LocalDate date);
 
     AppointmentResponse createAppointment(AppointmentRequest request);
 
@@ -17,10 +22,4 @@ public interface AppointmentService {
     AppointmentResponse updateAppointment(Long id, AppointmentRequest request);
 
     void deleteAppointment(Long id);
-
-    List<AppointmentResponse> getAppointmentsByClinic(Long clinicId);
-
-    List<AppointmentResponse> getAppointmentsByPatient(Long patientId);
-
-    List<AppointmentResponse> getAppointmentsByDate(LocalDate date);
 }

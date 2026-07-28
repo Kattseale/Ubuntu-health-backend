@@ -7,9 +7,14 @@ import com.ubuntuhealth.dto.request.RegisterRequest;
 import com.ubuntuhealth.dto.request.ResetPasswordRequest;
 import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.LoginResponse;
+import com.ubuntuhealth.entity.Clinic;
 import com.ubuntuhealth.entity.PasswordResetToken;
+import com.ubuntuhealth.entity.Patient;
+import com.ubuntuhealth.entity.Role;
 import com.ubuntuhealth.entity.User;
+import com.ubuntuhealth.repository.ClinicRepository;
 import com.ubuntuhealth.repository.PasswordResetTokenRepository;
+import com.ubuntuhealth.repository.PatientRepository;
 import com.ubuntuhealth.repository.UserRepository;
 import com.ubuntuhealth.security.JwtService;
 import com.ubuntuhealth.service.AuthService;
@@ -28,6 +33,8 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
+    private final ClinicRepository clinicRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -51,7 +58,36 @@ public class AuthServiceImpl implements AuthService {
                 .passwordChanged(false)
                 .build();
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Automatically create Patient profile
+        if (savedUser.getRole() == Role.PATIENT) {
+
+            Clinic clinic = clinicRepository.findAll()
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new RuntimeException("No clinics exist. Please create a clinic first."));
+
+            Patient patient = Patient.builder()
+                    .firstName(savedUser.getFirstName())
+                    .lastName(savedUser.getLastName())
+                    .email(savedUser.getEmail())
+                    .phoneNumber(savedUser.getPhoneNumber())
+                    .clinic(clinic)
+                    .user(savedUser)
+
+                    // Temporary default values
+                    .gender("")
+                    .address("")
+                    .bloodGroup("")
+                    .dateOfBirth(null)
+                    .emergencyContactName("Not Provided")
+                    .emergencyContactPhone("Not Provided")
+                    .build();
+
+            patientRepository.save(patient);
+        }
 
         return new ApiResponse("User registered successfully.");
     }
@@ -63,17 +99,14 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() ->
                         new RuntimeException("Invalid email or password."));
 
-        // Check if account is enabled
         if (!Boolean.TRUE.equals(user.getEnabled())) {
             throw new RuntimeException(
                     "Your account has been disabled. Please contact the administrator."
             );
         }
 
-        // Check if account is locked
         if (Boolean.TRUE.equals(user.getAccountLocked())) {
 
-            // Unlock automatically after 30 minutes
             if (user.getLockTime() != null &&
                     user.getLockTime().plusMinutes(30).isBefore(LocalDateTime.now())) {
 
@@ -125,7 +158,6 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        // Successful login
         user.setFailedLoginAttempts(0);
         user.setAccountLocked(false);
         user.setLockTime(null);
@@ -141,6 +173,7 @@ public class AuthServiceImpl implements AuthService {
                 .message("Login successful.")
                 .build();
     }
+
     @Override
     public ApiResponse forgotPassword(ForgotPasswordRequest request) {
 

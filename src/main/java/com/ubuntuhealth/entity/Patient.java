@@ -21,7 +21,7 @@ public class Patient {
     @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable =false)
     private String lastName;
 
     private String gender;
@@ -46,4 +46,9 @@ public class Patient {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clinic_id", nullable = false)
     private Clinic clinic;
+
+    // NEW
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true)
+    private User user;
 }

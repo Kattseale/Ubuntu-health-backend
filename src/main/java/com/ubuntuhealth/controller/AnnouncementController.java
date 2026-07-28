@@ -39,7 +39,7 @@ public class AnnouncementController {
      * Everyone logged in
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN','PATIENT')")
     public ResponseEntity<List<AnnouncementResponse>> getAllAnnouncements() {
 
         return ResponseEntity.ok(

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,9 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-
                 .cors(Customizer.withDefaults())
 
                 .sessionManagement(session ->
@@ -39,7 +36,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public endpoints
+                        // Public
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
@@ -47,28 +44,31 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Clinics
+                        .requestMatchers("/api/clinics/**")
+                        .hasAnyRole("ADMIN", "PATIENT")
+
                         // Announcements
-                        // Roles are enforced using @PreAuthorize in AnnouncementController
                         .requestMatchers("/api/announcements/**")
                         .authenticated()
 
-                        // Admin endpoints
+                        // Admin
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
-                        // Doctor endpoints
+                        // Doctor
                         .requestMatchers("/api/doctor/**")
                         .hasRole("DOCTOR")
 
-                        // Receptionist endpoints
+                        // Receptionist
                         .requestMatchers("/api/receptionist/**")
                         .hasRole("RECEPTIONIST")
 
-                        // Patient endpoints
+                        // Patient
                         .requestMatchers("/api/patient/**")
                         .hasRole("PATIENT")
 
-                        // Everything else requires authentication
+                        // Everything else
                         .anyRequest()
                         .authenticated()
                 )

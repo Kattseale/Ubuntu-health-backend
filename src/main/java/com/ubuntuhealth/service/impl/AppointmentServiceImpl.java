@@ -5,12 +5,13 @@ import com.ubuntuhealth.dto.response.AppointmentResponse;
 import com.ubuntuhealth.entity.Appointment;
 import com.ubuntuhealth.entity.Clinic;
 import com.ubuntuhealth.entity.Patient;
-import com.ubuntuhealth.exception.ResourceNotFoundException;
 import com.ubuntuhealth.repository.AppointmentRepository;
 import com.ubuntuhealth.repository.ClinicRepository;
 import com.ubuntuhealth.repository.PatientRepository;
 import com.ubuntuhealth.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -27,26 +28,36 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse createAppointment(AppointmentRequest request) {
 
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found."));
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        Patient patient = patientRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Patient profile not found."));
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Clinic not found."));
 
         Appointment appointment = Appointment.builder()
                 .appointmentDate(request.getAppointmentDate())
                 .appointmentTime(request.getAppointmentTime())
                 .reason(request.getReason())
-                .status(request.getStatus())
                 .patient(patient)
                 .clinic(clinic)
                 .build();
 
-        return mapToResponse(appointmentRepository.save(appointment));
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        return mapToResponse(savedAppointment);
     }
 
     @Override
     public List<AppointmentResponse> getAllAppointments() {
+
         return appointmentRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
@@ -57,7 +68,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse getAppointmentById(Long id) {
 
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Appointment not found."));
 
         return mapToResponse(appointment);
     }
@@ -66,35 +78,36 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse updateAppointment(Long id, AppointmentRequest request) {
 
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found."));
-
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Appointment not found."));
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Clinic not found."));
 
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentTime(request.getAppointmentTime());
         appointment.setReason(request.getReason());
-        appointment.setStatus(request.getStatus());
-        appointment.setPatient(patient);
         appointment.setClinic(clinic);
 
-        return mapToResponse(appointmentRepository.save(appointment));
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
+
+        return mapToResponse(updatedAppointment);
     }
 
     @Override
     public void deleteAppointment(Long id) {
 
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Appointment not found."));
 
         appointmentRepository.delete(appointment);
     }
 
     @Override
     public List<AppointmentResponse> getAppointmentsByClinic(Long clinicId) {
+
         return appointmentRepository.findByClinicId(clinicId)
                 .stream()
                 .map(this::mapToResponse)
@@ -103,6 +116,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentResponse> getAppointmentsByPatient(Long patientId) {
+
         return appointmentRepository.findByPatientId(patientId)
                 .stream()
                 .map(this::mapToResponse)
@@ -111,11 +125,16 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentResponse> getAppointmentsByDate(LocalDate date) {
+
         return appointmentRepository.findByAppointmentDate(date)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
+
+    // ==========================
+    // Helper Method
+    // ==========================
 
     private AppointmentResponse mapToResponse(Appointment appointment) {
 

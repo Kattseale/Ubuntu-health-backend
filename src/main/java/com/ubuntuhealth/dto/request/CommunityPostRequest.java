@@ -15,6 +15,7 @@ public class CommunityPostRequest {
     @Size(max = 200, message = "Title cannot exceed 200 characters.")
     private String title;
 
+
     @NotBlank(message = "Post content is required.")
     @Size(min = 5, max = 3000,
             message = "Post content must be between 5 and 3000 characters.")

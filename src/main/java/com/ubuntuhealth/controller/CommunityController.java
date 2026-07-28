@@ -6,6 +6,7 @@ import com.ubuntuhealth.dto.response.CommunityPostResponse;
 import com.ubuntuhealth.service.CommunityPostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,42 +20,50 @@ public class CommunityController {
 
     private final CommunityPostService communityPostService;
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleException(Exception e) {
+
+        e.printStackTrace();
+
+        return ResponseEntity
+                .badRequest()
+                .body(e.getMessage());
+    }
     // ================= CREATE =================
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('PATIENT')")
     public CommunityPostResponse createPost(
             @Valid @RequestBody CommunityPostRequest request) {
 
         return communityPostService.createPost(request);
     }
 
+
     // ================= READ =================
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','PATIENT','DOCTOR','RECEPTIONIST')")
     public List<CommunityPostResponse> getAllPosts() {
 
         return communityPostService.getAllPosts();
     }
 
-    @GetMapping("/{id}")
-    public CommunityPostResponse getPostById(
-            @PathVariable Long id) {
 
-        return communityPostService.getPostById(id);
+    // ================= USER POSTS =================
+
+    @GetMapping("/my-posts")
+    @PreAuthorize("hasRole('PATIENT')")
+    public List<CommunityPostResponse> getMyPosts() {
+
+        return communityPostService.getMyPosts();
     }
 
-    @GetMapping("/user/{userId}")
-    public List<CommunityPostResponse> getPostsByUser(
-            @PathVariable Long userId) {
-
-        return communityPostService.getPostsByUser(userId);
-    }
 
     // ================= UPDATE =================
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('PATIENT')")
     public CommunityPostResponse updatePost(
             @PathVariable Long id,
             @Valid @RequestBody CommunityPostRequest request) {
@@ -62,10 +71,11 @@ public class CommunityController {
         return communityPostService.updatePost(id, request);
     }
 
+
     // ================= DELETE =================
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','PATIENT')")
     public ApiResponse deletePost(
             @PathVariable Long id) {
 

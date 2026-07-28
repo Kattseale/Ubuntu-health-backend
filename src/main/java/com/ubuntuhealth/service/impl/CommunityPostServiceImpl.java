@@ -93,12 +93,13 @@ public class CommunityPostServiceImpl implements CommunityPostService {
     }
 
     @Override
-    public List<CommunityPostResponse> getPostsByUser(Long userId) {
+    public List<CommunityPostResponse> getMyPosts() {
+        return List.of();
+    }
 
-        return communityPostRepository.findByUserId(userId)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    @Override
+    public List<CommunityPostResponse> getPostsByUser(Long userId) {
+        return List.of();
     }
 
     private CommunityPostResponse mapToResponse(CommunityPost post) {
