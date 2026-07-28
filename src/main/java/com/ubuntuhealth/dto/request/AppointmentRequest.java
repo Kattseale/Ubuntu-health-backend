@@ -23,12 +23,6 @@ public class AppointmentRequest {
     @NotBlank(message = "Reason is required.")
     private String reason;
 
-    @NotBlank(message = "Status is required.")
-    private String status;
-
-    @NotNull(message = "Patient is required.")
-    private Long patientId;
-
     @NotNull(message = "Clinic is required.")
     private Long clinicId;
 }
