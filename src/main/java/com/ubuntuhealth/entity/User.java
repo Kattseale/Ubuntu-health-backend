@@ -18,11 +18,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ===============================
+    // Personal Information
+    // ===============================
+
     @Column(nullable = false)
     private String firstName;
 
     @Column(nullable = false)
     private String lastName;
+
+    // ===============================
+    // Login Information
+    // ===============================
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -33,13 +41,37 @@ public class User {
     @Column(nullable = false, unique = true, length = 20)
     private String phoneNumber;
 
+    // ===============================
+    // Role
+    // ===============================
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
+    // ===============================
+    // Account Status
+    // ===============================
+
+    /**
+     * New accounts are disabled until
+     * the user verifies their email.
+     */
     @Builder.Default
     @Column(nullable = false)
-    private Boolean enabled = true;
+    private Boolean enabled = false;
+
+    // ===============================
+    // Email Verification
+    // ===============================
+
+    /**
+     * Indicates whether the user's
+     * email address has been verified.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
 
     // ===============================
     // Password Status
@@ -63,5 +95,4 @@ public class User {
 
     @Column
     private LocalDateTime lockTime;
-
 }

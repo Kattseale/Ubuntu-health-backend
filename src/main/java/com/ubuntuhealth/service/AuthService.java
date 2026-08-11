@@ -20,4 +20,5 @@ public interface AuthService {
 
     ApiResponse changePassword(ChangePasswordRequest request);
 
+    ApiResponse verifyEmail(String token);
 }

@@ -8,8 +8,11 @@ import com.ubuntuhealth.dto.request.ResetPasswordRequest;
 import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.LoginResponse;
 import com.ubuntuhealth.service.AuthService;
+
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +24,10 @@ public class AuthController {
     private final AuthService authService;
 
 
+    // ============================================================
+    // REGISTER
+    // ============================================================
+
     @PostMapping("/register")
     public ApiResponse register(
             @Valid @RequestBody RegisterRequest request
@@ -29,6 +36,10 @@ public class AuthController {
         return authService.register(request);
     }
 
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
 
     @PostMapping("/login")
     public LoginResponse login(
@@ -39,6 +50,23 @@ public class AuthController {
     }
 
 
+    // ============================================================
+    // VERIFY EMAIL
+    // ============================================================
+
+    @GetMapping("/verify-email")
+    public ApiResponse verifyEmail(
+            @RequestParam("token") String token
+    ) {
+
+        return authService.verifyEmail(token);
+    }
+
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+
     @PostMapping("/forgot-password")
     public ApiResponse forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
@@ -48,6 +76,10 @@ public class AuthController {
     }
 
 
+    // ============================================================
+    // RESET PASSWORD
+    // ============================================================
+
     @PostMapping("/reset-password")
     public ApiResponse resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
@@ -56,6 +88,10 @@ public class AuthController {
         return authService.resetPassword(request);
     }
 
+
+    // ============================================================
+    // CHANGE PASSWORD
+    // ============================================================
 
     @PostMapping("/change-password")
     public ApiResponse changePassword(
