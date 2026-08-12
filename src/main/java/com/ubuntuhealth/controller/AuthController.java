@@ -4,6 +4,7 @@ import com.ubuntuhealth.dto.request.ChangePasswordRequest;
 import com.ubuntuhealth.dto.request.ForgotPasswordRequest;
 import com.ubuntuhealth.dto.request.LoginRequest;
 import com.ubuntuhealth.dto.request.RegisterRequest;
+import com.ubuntuhealth.dto.request.ResendVerificationRequest;
 import com.ubuntuhealth.dto.request.ResetPasswordRequest;
 import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.LoginResponse;
@@ -13,12 +14,13 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5174")
 public class AuthController {
 
     private final AuthService authService;
@@ -29,24 +31,13 @@ public class AuthController {
     // ============================================================
 
     @PostMapping("/register")
-    public ApiResponse register(
+    public ResponseEntity<ApiResponse> register(
             @Valid @RequestBody RegisterRequest request
     ) {
 
-        return authService.register(request);
-    }
-
-
-    // ============================================================
-    // LOGIN
-    // ============================================================
-
-    @PostMapping("/login")
-    public LoginResponse login(
-            @Valid @RequestBody LoginRequest request
-    ) {
-
-        return authService.login(request);
+        return ResponseEntity.ok(
+                authService.register(request)
+        );
     }
 
 
@@ -55,11 +46,43 @@ public class AuthController {
     // ============================================================
 
     @GetMapping("/verify-email")
-    public ApiResponse verifyEmail(
-            @RequestParam("token") String token
+    public ResponseEntity<ApiResponse> verifyEmail(
+            @RequestParam String token
     ) {
 
-        return authService.verifyEmail(token);
+        return ResponseEntity.ok(
+                authService.verifyEmail(token)
+        );
+    }
+
+
+    // ============================================================
+    // RESEND VERIFICATION EMAIL
+    // ============================================================
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse> resendVerificationEmail(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                authService.resendVerificationEmail(request)
+        );
+    }
+
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                authService.login(request)
+        );
     }
 
 
@@ -68,11 +91,13 @@ public class AuthController {
     // ============================================================
 
     @PostMapping("/forgot-password")
-    public ApiResponse forgotPassword(
+    public ResponseEntity<ApiResponse> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ) {
 
-        return authService.forgotPassword(request);
+        return ResponseEntity.ok(
+                authService.forgotPassword(request)
+        );
     }
 
 
@@ -81,11 +106,13 @@ public class AuthController {
     // ============================================================
 
     @PostMapping("/reset-password")
-    public ApiResponse resetPassword(
+    public ResponseEntity<ApiResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ) {
 
-        return authService.resetPassword(request);
+        return ResponseEntity.ok(
+                authService.resetPassword(request)
+        );
     }
 
 
@@ -94,10 +121,12 @@ public class AuthController {
     // ============================================================
 
     @PostMapping("/change-password")
-    public ApiResponse changePassword(
+    public ResponseEntity<ApiResponse> changePassword(
             @Valid @RequestBody ChangePasswordRequest request
     ) {
 
-        return authService.changePassword(request);
+        return ResponseEntity.ok(
+                authService.changePassword(request)
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.ubuntuhealth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
@@ -10,6 +11,9 @@ public class ResetPasswordRequest {
     private String token;
 
     @NotBlank(message = "New password is required.")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$",
+            message = "Password must be 8-50 characters long and contain at least one uppercase letter, one lowercase letter, one number and one special character."
+    )
     private String newPassword;
-
 }

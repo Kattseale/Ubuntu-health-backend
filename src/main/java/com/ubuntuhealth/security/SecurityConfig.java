@@ -3,9 +3,9 @@ package com.ubuntuhealth.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,7 +23,6 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
@@ -37,13 +36,11 @@ public class SecurityConfig {
 
                 .csrf(csrf -> csrf.disable())
 
-
                 // =====================================================
                 // CORS
                 // =====================================================
 
                 .cors(Customizer.withDefaults())
-
 
                 // =====================================================
                 // SESSION
@@ -55,7 +52,6 @@ public class SecurityConfig {
                         )
                 )
 
-
                 // =====================================================
                 // AUTHORIZATION
                 // =====================================================
@@ -63,7 +59,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // =================================================
-                        // PUBLIC
+                        // PUBLIC AUTH ENDPOINTS
                         // =================================================
 
                         .requestMatchers(
@@ -73,7 +69,6 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         )
                         .permitAll()
-
 
                         // =================================================
                         // CLINICS
@@ -85,141 +80,81 @@ public class SecurityConfig {
                                 "ADMIN"
                         )
 
+                        // =================================================
+                        // APPOINTMENTS
+                        // =================================================
 
-                                // =====================================================
-// APPOINTMENTS
-// =====================================================
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.POST,
+                                "/api/appointments"
+                        )
+                        .hasAnyRole(
+                                "PATIENT",
+                                "ADMIN"
+                        )
 
-// -----------------------------------------------------
-// CREATE APPOINTMENT
-// PATIENT + ADMIN
-// -----------------------------------------------------
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments/my"
+                        )
+                        .hasRole("PATIENT")
 
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.POST,
-                                        "/api/appointments"
-                                )
-                                .hasAnyRole(
-                                        "PATIENT",
-                                        "ADMIN"
-                                )
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments"
+                        )
+                        .hasRole("ADMIN")
 
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments/clinic/**"
+                        )
+                        .hasAnyRole(
+                                "PATIENT",
+                                "ADMIN"
+                        )
 
-// -----------------------------------------------------
-// MY APPOINTMENTS
-// PATIENT ONLY
-// -----------------------------------------------------
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments/date/**"
+                        )
+                        .hasAnyRole(
+                                "PATIENT",
+                                "ADMIN"
+                        )
 
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments/my"
-                                )
-                                .hasRole("PATIENT")
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments/patient/**"
+                        )
+                        .hasRole("ADMIN")
 
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/appointments/*"
+                        )
+                        .hasRole("ADMIN")
 
-// -----------------------------------------------------
-// ALL APPOINTMENTS
-// ADMIN ONLY
-// -----------------------------------------------------
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.PUT,
+                                "/api/appointments/*"
+                        )
+                        .hasRole("ADMIN")
 
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments"
-                                )
-                                .hasRole("ADMIN")
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.DELETE,
+                                "/api/appointments/*"
+                        )
+                        .hasAnyRole(
+                                "PATIENT",
+                                "ADMIN"
+                        )
 
-
-// -----------------------------------------------------
-// CLINIC APPOINTMENTS
-// PATIENT + ADMIN
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments/clinic/**"
-                                )
-                                .hasAnyRole(
-                                        "PATIENT",
-                                        "ADMIN"
-                                )
-
-
-// -----------------------------------------------------
-// APPOINTMENTS BY DATE
-// PATIENT + ADMIN
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments/date/**"
-                                )
-                                .hasAnyRole(
-                                        "PATIENT",
-                                        "ADMIN"
-                                )
-
-
-// -----------------------------------------------------
-// APPOINTMENTS BY PATIENT
-// ADMIN ONLY
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments/patient/**"
-                                )
-                                .hasRole("ADMIN")
-
-
-// -----------------------------------------------------
-// APPOINTMENT BY ID
-// ADMIN ONLY
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.GET,
-                                        "/api/appointments/*"
-                                )
-                                .hasRole("ADMIN")
-
-
-// -----------------------------------------------------
-// UPDATE
-// ADMIN ONLY
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.PUT,
-                                        "/api/appointments/*"
-                                )
-                                .hasRole("ADMIN")
-
-
-// -----------------------------------------------------
-// CANCEL
-// PATIENT + ADMIN
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.DELETE,
-                                        "/api/appointments/*"
-                                )
-                                .hasAnyRole(
-                                        "PATIENT",
-                                        "ADMIN"
-                                )
-
-
-// -----------------------------------------------------
-// COMPLETE
-// ADMIN ONLY
-// -----------------------------------------------------
-
-                                .requestMatchers(
-                                        org.springframework.http.HttpMethod.PUT,
-                                        "/api/appointments/*/complete"
-                                )
-                                .hasRole("ADMIN")
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.PUT,
+                                "/api/appointments/*/complete"
+                        )
+                        .hasRole("ADMIN")
 
                         // =================================================
                         // ANNOUNCEMENTS
@@ -230,7 +165,6 @@ public class SecurityConfig {
                         )
                         .authenticated()
 
-
                         // =================================================
                         // ADMIN
                         // =================================================
@@ -239,7 +173,6 @@ public class SecurityConfig {
                                 "/api/admin/**"
                         )
                         .hasRole("ADMIN")
-
 
                         // =================================================
                         // DOCTOR
@@ -250,7 +183,6 @@ public class SecurityConfig {
                         )
                         .hasRole("DOCTOR")
 
-
                         // =================================================
                         // RECEPTIONIST
                         // =================================================
@@ -259,7 +191,6 @@ public class SecurityConfig {
                                 "/api/receptionist/**"
                         )
                         .hasRole("RECEPTIONIST")
-
 
                         // =================================================
                         // PATIENT
@@ -270,7 +201,6 @@ public class SecurityConfig {
                         )
                         .hasRole("PATIENT")
 
-
                         // =================================================
                         // EVERYTHING ELSE
                         // =================================================
@@ -279,7 +209,6 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-
                 // =====================================================
                 // AUTHENTICATION PROVIDER
                 // =====================================================
@@ -287,7 +216,6 @@ public class SecurityConfig {
                 .authenticationProvider(
                         authenticationProvider()
                 )
-
 
                 // =====================================================
                 // JWT FILTER
@@ -298,10 +226,8 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class
                 );
 
-
         return http.build();
     }
-
 
     // =============================================================
     // AUTHENTICATION PROVIDER
@@ -323,7 +249,6 @@ public class SecurityConfig {
 
         return provider;
     }
-
 
     // =============================================================
     // AUTHENTICATION MANAGER

@@ -4,6 +4,7 @@ import com.ubuntuhealth.dto.request.ChangePasswordRequest;
 import com.ubuntuhealth.dto.request.ForgotPasswordRequest;
 import com.ubuntuhealth.dto.request.LoginRequest;
 import com.ubuntuhealth.dto.request.RegisterRequest;
+import com.ubuntuhealth.dto.request.ResendVerificationRequest;
 import com.ubuntuhealth.dto.request.ResetPasswordRequest;
 import com.ubuntuhealth.dto.response.ApiResponse;
 import com.ubuntuhealth.dto.response.LoginResponse;
@@ -21,6 +22,8 @@ import com.ubuntuhealth.repository.UserRepository;
 import com.ubuntuhealth.security.JwtService;
 import com.ubuntuhealth.service.AuthService;
 import com.ubuntuhealth.service.EmailService;
+
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -61,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
     // ============================================================
 
     @Override
+    @Transactional
     public ApiResponse register(RegisterRequest request) {
 
         // ========================================================
@@ -110,16 +114,12 @@ public class AuthServiceImpl implements AuthService {
 
                 .role(request.getRole())
 
-                // Account status
                 .enabled(true)
 
-                // Email verification
                 .emailVerified(false)
 
-                // Password status
                 .passwordChanged(false)
 
-                // Account security
                 .failedLoginAttempts(0)
 
                 .accountLocked(false)
@@ -168,7 +168,6 @@ public class AuthServiceImpl implements AuthService {
 
                     .user(savedUser)
 
-                    // Temporary default values
                     .gender("")
 
                     .address("")
@@ -204,7 +203,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         // ========================================================
-        // GENERATE EMAIL VERIFICATION TOKEN
+        // GENERATE VERIFICATION TOKEN
         // ========================================================
 
         String verificationToken =
@@ -231,7 +230,139 @@ public class AuthServiceImpl implements AuthService {
 
 
         // ========================================================
-        // SAVE VERIFICATION TOKEN
+        // SAVE TOKEN
+        // ========================================================
+
+        emailVerificationTokenRepository.save(
+                emailToken
+        );
+
+
+        // ========================================================
+        // SEND EMAIL
+        // ========================================================
+
+        emailService.sendVerificationEmail(
+                savedUser.getEmail(),
+                savedUser.getFirstName(),
+                verificationToken
+        );
+
+
+        // ========================================================
+        // SUCCESS
+        // ========================================================
+
+        return new ApiResponse(
+                "Registration successful. " +
+                        "Please check your email and click the verification link " +
+                        "to activate your account."
+        );
+    }
+
+
+    // ============================================================
+    // RESEND VERIFICATION EMAIL
+    // ============================================================
+
+    @Override
+    @Transactional
+    public ApiResponse resendVerificationEmail(
+            ResendVerificationRequest request
+    ) {
+
+        // ========================================================
+        // CLEAN EMAIL
+        // ========================================================
+
+        String email = request.getEmail()
+                .trim()
+                .toLowerCase();
+
+
+        // ========================================================
+        // FIND USER
+        // ========================================================
+
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "No account was found with this email address."
+                        )
+                );
+
+
+        // ========================================================
+        // CHECK IF ALREADY VERIFIED
+        // ========================================================
+
+        if (Boolean.TRUE.equals(
+                user.getEmailVerified()
+        )) {
+
+            return new ApiResponse(
+                    "This email address has already been verified. " +
+                            "You can log in."
+            );
+        }
+
+
+        // ========================================================
+        // CHECK ACCOUNT ENABLED
+        // ========================================================
+
+        if (!Boolean.TRUE.equals(
+                user.getEnabled()
+        )) {
+
+            throw new RuntimeException(
+                    "This account has been disabled. " +
+                            "Please contact the administrator."
+            );
+        }
+
+
+        // ========================================================
+        // DELETE OLD TOKEN
+        // ========================================================
+
+        emailVerificationTokenRepository
+                .findByUserId(user.getId())
+                .ifPresent(
+                        emailVerificationTokenRepository::delete
+                );
+
+
+        // ========================================================
+        // GENERATE NEW TOKEN
+        // ========================================================
+
+        String verificationToken =
+                UUID.randomUUID().toString();
+
+
+        // ========================================================
+        // CREATE NEW TOKEN
+        // ========================================================
+
+        EmailVerificationToken emailToken =
+                EmailVerificationToken.builder()
+
+                        .token(verificationToken)
+
+                        .user(user)
+
+                        .expiryDate(
+                                LocalDateTime.now()
+                                        .plusMinutes(30)
+                        )
+
+                        .build();
+
+
+        // ========================================================
+        // SAVE NEW TOKEN
         // ========================================================
 
         emailVerificationTokenRepository.save(
@@ -244,20 +375,20 @@ public class AuthServiceImpl implements AuthService {
         // ========================================================
 
         emailService.sendVerificationEmail(
-                savedUser.getEmail(),
-                savedUser.getFirstName(),
+                user.getEmail(),
+                user.getFirstName(),
                 verificationToken
         );
 
 
         // ========================================================
-        // REGISTRATION SUCCESS
+        // SUCCESS
         // ========================================================
 
         return new ApiResponse(
-                "Registration successful. " +
-                        "Please check your email and click the verification link " +
-                        "to activate your account."
+                "A new verification email has been sent to " +
+                        user.getEmail() +
+                        ". Please check your inbox."
         );
     }
 
@@ -267,13 +398,15 @@ public class AuthServiceImpl implements AuthService {
     // ============================================================
 
     @Override
+    @Transactional
     public ApiResponse verifyEmail(String token) {
 
         // ========================================================
         // CHECK TOKEN
         // ========================================================
 
-        if (token == null || token.trim().isEmpty()) {
+        if (token == null ||
+                token.trim().isEmpty()) {
 
             throw new RuntimeException(
                     "Verification token is required."
@@ -317,7 +450,8 @@ public class AuthServiceImpl implements AuthService {
         // GET USER
         // ========================================================
 
-        User user = verificationToken.getUser();
+        User user =
+                verificationToken.getUser();
 
 
         // ========================================================
@@ -325,7 +459,8 @@ public class AuthServiceImpl implements AuthService {
         // ========================================================
 
         if (Boolean.TRUE.equals(
-                user.getEmailVerified())) {
+                user.getEmailVerified()
+        )) {
 
             emailVerificationTokenRepository
                     .delete(verificationToken);
@@ -337,7 +472,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         // ========================================================
-        // VERIFY USER EMAIL
+        // VERIFY EMAIL
         // ========================================================
 
         user.setEmailVerified(true);
@@ -371,7 +506,9 @@ public class AuthServiceImpl implements AuthService {
     // ============================================================
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(
+            LoginRequest request
+    ) {
 
         User user = userRepository
                 .findByEmail(request.getEmail())
@@ -387,7 +524,8 @@ public class AuthServiceImpl implements AuthService {
         // ========================================================
 
         if (!Boolean.TRUE.equals(
-                user.getEnabled())) {
+                user.getEnabled()
+        )) {
 
             throw new RuntimeException(
                     "Your account has been disabled. " +
@@ -401,7 +539,8 @@ public class AuthServiceImpl implements AuthService {
         // ========================================================
 
         if (!Boolean.TRUE.equals(
-                user.getEmailVerified())) {
+                user.getEmailVerified()
+        )) {
 
             throw new RuntimeException(
                     "Please verify your email address " +
@@ -415,7 +554,8 @@ public class AuthServiceImpl implements AuthService {
         // ========================================================
 
         if (Boolean.TRUE.equals(
-                user.getAccountLocked())) {
+                user.getAccountLocked()
+        )) {
 
             if (user.getLockTime() != null &&
                     user.getLockTime()
@@ -469,7 +609,7 @@ public class AuthServiceImpl implements AuthService {
 
 
             // ====================================================
-            // LOCK AFTER 5 FAILED ATTEMPTS
+            // LOCK AFTER 5 ATTEMPTS
             // ====================================================
 
             if (attempts >= 5) {
@@ -537,12 +677,16 @@ public class AuthServiceImpl implements AuthService {
 
 
     // ============================================================
-    // FORGOT PASSWORD
-    // ============================================================
+// FORGOT PASSWORD
+// ============================================================
 
     @Override
     public ApiResponse forgotPassword(
             ForgotPasswordRequest request) {
+
+        // ========================================================
+        // FIND USER
+        // ========================================================
 
         User user = userRepository
                 .findByEmail(request.getEmail())
@@ -553,6 +697,10 @@ public class AuthServiceImpl implements AuthService {
                 );
 
 
+        // ========================================================
+        // CHECK ACCOUNT ENABLED
+        // ========================================================
+
         if (!Boolean.TRUE.equals(
                 user.getEnabled())) {
 
@@ -562,7 +710,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
 
-        // Delete existing reset token
+        // ========================================================
+        // DELETE OLD RESET TOKEN
+        // ========================================================
+
         passwordResetTokenRepository
                 .findByUserId(user.getId())
                 .ifPresent(
@@ -570,10 +721,17 @@ public class AuthServiceImpl implements AuthService {
                 );
 
 
-        // Generate new token
+        // ========================================================
+        // GENERATE RESET TOKEN
+        // ========================================================
+
         String token =
                 UUID.randomUUID().toString();
 
+
+        // ========================================================
+        // CREATE RESET TOKEN
+        // ========================================================
 
         PasswordResetToken resetToken =
                 PasswordResetToken.builder()
@@ -590,175 +748,43 @@ public class AuthServiceImpl implements AuthService {
                         .build();
 
 
+        // ========================================================
+        // SAVE RESET TOKEN
+        // ========================================================
+
         passwordResetTokenRepository.save(
                 resetToken
         );
 
 
+        // ========================================================
+        // SEND RESET EMAIL
+        // ========================================================
+
+        emailService.sendPasswordResetEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                token
+        );
+
+
+        // ========================================================
+        // SUCCESS
+        // ========================================================
+
         return new ApiResponse(
-                "Password reset token generated successfully: "
-                        + token
+                "Password reset instructions have been sent "
+                        + "to your email address."
         );
     }
 
-
-    // ============================================================
-    // RESET PASSWORD
-    // ============================================================
-
     @Override
-    public ApiResponse resetPassword(
-            ResetPasswordRequest request) {
-
-        PasswordResetToken resetToken =
-                passwordResetTokenRepository
-                        .findByToken(
-                                request.getToken()
-                        )
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Invalid reset token."
-                                )
-                        );
-
-
-        // ========================================================
-        // CHECK TOKEN EXPIRATION
-        // ========================================================
-
-        if (resetToken
-                .getExpiryDate()
-                .isBefore(LocalDateTime.now())) {
-
-            passwordResetTokenRepository
-                    .delete(resetToken);
-
-            throw new RuntimeException(
-                    "Reset token has expired."
-            );
-        }
-
-
-        User user = resetToken.getUser();
-
-
-        // ========================================================
-        // PREVENT SAME PASSWORD
-        // ========================================================
-
-        if (passwordEncoder.matches(
-                request.getNewPassword(),
-                user.getPassword()
-        )) {
-
-            throw new RuntimeException(
-                    "New password cannot be the same " +
-                            "as the current password."
-            );
-        }
-
-
-        // ========================================================
-        // UPDATE PASSWORD
-        // ========================================================
-
-        user.setPassword(
-                passwordEncoder.encode(
-                        request.getNewPassword()
-                )
-        );
-
-        user.setPasswordChanged(true);
-
-        userRepository.save(user);
-
-
-        // ========================================================
-        // DELETE USED TOKEN
-        // ========================================================
-
-        passwordResetTokenRepository
-                .delete(resetToken);
-
-
-        return new ApiResponse(
-                "Password reset successfully."
-        );
+    public ApiResponse resetPassword(ResetPasswordRequest request) {
+        return null;
     }
 
-
-    // ============================================================
-    // CHANGE PASSWORD
-    // ============================================================
-
     @Override
-    public ApiResponse changePassword(
-            ChangePasswordRequest request) {
-
-        String email =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getName();
-
-
-        User user = userRepository
-                .findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found."
-                        )
-                );
-
-
-        // ========================================================
-        // CHECK CURRENT PASSWORD
-        // ========================================================
-
-        if (!passwordEncoder.matches(
-                request.getCurrentPassword(),
-                user.getPassword()
-        )) {
-
-            throw new RuntimeException(
-                    "Current password is incorrect."
-            );
-        }
-
-
-        // ========================================================
-        // PREVENT SAME PASSWORD
-        // ========================================================
-
-        if (passwordEncoder.matches(
-                request.getNewPassword(),
-                user.getPassword()
-        )) {
-
-            throw new RuntimeException(
-                    "New password cannot be the same " +
-                            "as the current password."
-            );
-        }
-
-
-        // ========================================================
-        // UPDATE PASSWORD
-        // ========================================================
-
-        user.setPassword(
-                passwordEncoder.encode(
-                        request.getNewPassword()
-                )
-        );
-
-        user.setPasswordChanged(true);
-
-        userRepository.save(user);
-
-
-        return new ApiResponse(
-                "Password changed successfully."
-        );
+    public ApiResponse changePassword(ChangePasswordRequest request) {
+        return null;
     }
 }

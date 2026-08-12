@@ -19,6 +19,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+
     // ============================================================
     // SEND VERIFICATION EMAIL
     // ============================================================
@@ -39,11 +40,13 @@ public class EmailServiceImpl implements EmailService {
                         + "/verify-email?token="
                         + verificationToken;
 
+
         // ========================================================
         // CREATE EMAIL
         // ========================================================
 
-        SimpleMailMessage message = new SimpleMailMessage();
+        SimpleMailMessage message =
+                new SimpleMailMessage();
 
         message.setFrom(fromEmail);
 
@@ -54,14 +57,15 @@ public class EmailServiceImpl implements EmailService {
         );
 
         message.setText(
+
                 "Hello " + firstName + ",\n\n"
 
                         + "Welcome to Ubuntu Health!\n\n"
 
                         + "Thank you for creating your Ubuntu Health account.\n\n"
 
-                        + "Please verify your email address by clicking the "
-                        + "link below:\n\n"
+                        + "Please verify your email address by clicking "
+                        + "the link below:\n\n"
 
                         + verificationLink + "\n\n"
 
@@ -73,6 +77,75 @@ public class EmailServiceImpl implements EmailService {
                         + "Regards,\n"
                         + "Ubuntu Health Team"
         );
+
+
+        // ========================================================
+        // SEND EMAIL
+        // ========================================================
+
+        mailSender.send(message);
+    }
+
+
+    // ============================================================
+    // SEND PASSWORD RESET EMAIL
+    // ============================================================
+
+    @Override
+    public void sendPasswordResetEmail(
+            String recipientEmail,
+            String firstName,
+            String resetToken
+    ) {
+
+        // ========================================================
+        // CREATE PASSWORD RESET LINK
+        // ========================================================
+
+        String resetLink =
+                frontendUrl
+                        + "/reset-password?token="
+                        + resetToken;
+
+
+        // ========================================================
+        // CREATE EMAIL
+        // ========================================================
+
+        SimpleMailMessage message =
+                new SimpleMailMessage();
+
+        message.setFrom(fromEmail);
+
+        message.setTo(recipientEmail);
+
+        message.setSubject(
+                "Ubuntu Health - Reset Your Password"
+        );
+
+        message.setText(
+
+                "Hello " + firstName + ",\n\n"
+
+                        + "We received a request to reset the password "
+                        + "for your Ubuntu Health account.\n\n"
+
+                        + "You can reset your password by clicking "
+                        + "the link below:\n\n"
+
+                        + resetLink + "\n\n"
+
+                        + "This password reset link will expire in "
+                        + "30 minutes.\n\n"
+
+                        + "If you did not request a password reset, "
+                        + "you can safely ignore this email. "
+                        + "Your password will remain unchanged.\n\n"
+
+                        + "Regards,\n"
+                        + "Ubuntu Health Team"
+        );
+
 
         // ========================================================
         // SEND EMAIL
